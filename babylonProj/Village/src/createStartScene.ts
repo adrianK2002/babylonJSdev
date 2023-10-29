@@ -25,6 +25,8 @@ import {
 //MIDDLE OF CODE - FUNCTIONS
 
 //***Set camera and light
+
+
 function createLight(scene: Scene) {
   const light = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
   light.intensity = 0.7;
@@ -57,7 +59,7 @@ function createBox1(Scene: Scene) {
   const mat = new StandardMaterial("mat");
     const texture = new Texture("https://assets.babylonjs.com/environments/cubehouse.png")
     mat.diffuseTexture = texture;
-  const box1 = MeshBuilder.CreateBox("box", {});
+  const box1 = MeshBuilder.CreateBox("box", {faceUV: faceUV, wrap: true});
   box1.material = mat;
   box1.position.y = 0.5;
   return box1;
@@ -89,6 +91,7 @@ function createGround(scene: Scene) {
   ground.material = mat;
   return ground;
 }
+
 
 
   
