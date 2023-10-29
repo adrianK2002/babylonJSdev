@@ -24,9 +24,11 @@ import {
 //--------------------------------------
 //MIDDLE OF CODE - FUNCTIONS
 
+
+
+
+
 //***Set camera and light
-
-
 function createLight(scene: Scene) {
   const light = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
   light.intensity = 0.7;
@@ -49,17 +51,16 @@ function createLight(scene: Scene) {
     return camera;
   }
 
-
-function createBox1(Scene: Scene) {
+  const buildBox = () => {
   const faceUV = [];
-  faceUV[0] = new Vector4(0.5, 0.0, 0.75, 1.0); //rear face
-  faceUV[1] = new Vector4(0.0, 0.0, 0.25, 1.0); //front face
-  faceUV[2] = new Vector4(0.25, 0, 0.5, 1.0); //right side
-  faceUV[3] = new Vector4(0.75, 0, 1.0, 1.0); //left side
+  faceUV[0] = new Vector4(0.6, 0.0, 1.0, 1.0); //rear face
+  faceUV[1] = new Vector4(0.0, 0.0, 0.4, 1.0); //front face
+  faceUV[2] = new Vector4(0.4, 0, 0.6, 1.0); //right side
+  faceUV[3] = new Vector4(0.4, 0, 0.6, 1.0); //left side
   const mat = new StandardMaterial("mat");
-    const texture = new Texture("https://assets.babylonjs.com/environments/cubehouse.png")
+    const texture = new Texture("https://assets.babylonjs.com/environments/semihouse.png")
     mat.diffuseTexture = texture;
-  const box1 = MeshBuilder.CreateBox("box", {faceUV: faceUV, wrap: true});
+  const box1 = MeshBuilder.CreateBox("box", {width: 2, faceUV: faceUV, wrap: true});
   box1.material = mat;
   box1.position.y = 0.5;
   return box1;
@@ -67,32 +68,36 @@ function createBox1(Scene: Scene) {
 
 
 
-function createRoof1(Scene: Scene) {
+const buildRoof = () => {
   const mat = new StandardMaterial("mat");
   const texture = new Texture("https://assets.babylonjs.com/environments/roof.jpg")
   mat.diffuseTexture = texture;
   const roof1 = MeshBuilder.CreateCylinder("roof", {diameter: 1.3, height: 1.2, tessellation: 3});
   roof1.material = mat;
   roof1.scaling.x = 0.75;
+  roof1.scaling.y = 2;
   roof1.rotation.z = Math.PI / 2;
   roof1.position.y = 1.22;
   return roof1;
 }
 
-function createGround(scene: Scene) {
+
+  const buildGround = () => {
   const mat = new StandardMaterial("mat");
   const color = new Color3(0, 1, 0);
   mat.diffuseColor = color;
   let ground = MeshBuilder.CreateGround(
     "ground",
-    { width: 10, height: 10 },
-    scene,
+    { width: 10, height: 10 }
   );
   ground.material = mat;
   return ground;
+  }
+
+const house = () => {
+  const house = Mesh.MergeMeshes([box1, roof1]);
+  return house; 
 }
-
-
 
   
 
@@ -122,9 +127,9 @@ function createGround(scene: Scene) {
     that.scene.debugLayer.show();
   
     //createBox(scene, posX, posY, posZ, scalX, scalY, scalZ)
-    that.Box1 = createBox1(that.scene);
-    that.Roof1 = createRoof1(that.scene);
-    that.ground = createGround(that.scene);
+    that.Box1 = buildBox();
+    that.Roof1 = buildRoof();
+    that.ground = buildGround();
     that.light = createLight(that.scene);
     that.camera = createArcRotateCamera(that.scene);
     return that;
