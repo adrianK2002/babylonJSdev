@@ -39,7 +39,7 @@ import { lightFragment } from "@babylonjs/core/Shaders/ShadersInclude/lightFragm
 function createTerrain(scene: Scene) {
   const largeGroundMat = new StandardMaterial("largeGroundMat");
   largeGroundMat.diffuseTexture = new Texture("https://assets.babylonjs.com/environments/valleygrass.png");
-  const largeGround = MeshBuilder.CreateGroundFromHeightMap("largeGround", "https://assets.babylonjs.com/environments/villageheightmap.png", {width:150, height:150, subdivisions: 20, minHeight:0, maxHeight: 10});
+  const largeGround = MeshBuilder.CreateGroundFromHeightMap("largeGround", "https://www.babylonjs-playground.com/textures/heightMapTriPlanar.png", {width:150, height:150, subdivisions: 20, minHeight:0, maxHeight: 10});
   largeGround.material = largeGroundMat;
   return largeGround;
 }

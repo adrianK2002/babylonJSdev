@@ -157,6 +157,7 @@ function createSkyBox(scene: Scene) {
     return sphere;
   }
 
+  
 //lights, shadows and camera
 
   function createAnyLight(scene: Scene, index: number, px: number, py: number, pz: number, colX: number, colY: number, colZ: number, mesh: Mesh) {

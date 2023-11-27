@@ -28,47 +28,23 @@ import {
     ActionManager,
     ExecuteCodeAction,
     AnimationPropertiesOverride,
-
-
   } from "@babylonjs/core";
   import HavokPhysics from "@babylonjs/havok";
-  import { HavokPlugin, PhysicsAggregate, PhysicsShapeType } from "@babylonjs/core"; 
+  import { HavokPlugin, PhysicsAggregate, PhysicsShapeType } from "@babylonjs/core";
   //----------------------------------------------------
   
-  
   //----------------------------------------------------
-  //Initialization of physics (havok)
+  //Initialisation of Physics (Havok)
   let initializedHavok;
   HavokPhysics().then((havok) => {
-  initializedHavok = havok;
+    initializedHavok = havok;
   });
+
   const havokInstance = await HavokPhysics();
   const havokPlugin = new HavokPlugin(true, havokInstance);
 
-globalThis.HK = await HavokPhysics();
-
-
-  //MIDDLE OF CODE - FUNCTIONS
-
- 
-
-  function createBox(scene: Scene, x: number, y: number, z: number){
-    let box: Mesh = MeshBuilder.CreateBox("box", { });
-    box.position.x = x;
-    box.position.y = y;
-    box.position.z = z;
-    const boxAggregate = new PhysicsAggregate(box, PhysicsShapeType.BOX, { mass: 1 }, scene);
-    return box;
-   } 
-
-   function createGround(scene: Scene) {
-    const ground: Mesh = MeshBuilder.CreateGround("ground", {height: 10, width: 10,
-   subdivisions: 4});
-    const groundAggregate = new PhysicsAggregate(ground, PhysicsShapeType.BOX, { mass: 0 },
-   scene);
-    return ground;
-   } 
-
+  globalThis.HK = await HavokPhysics();
+  //-----------------------------------------------------
 
   //MIDDLE OF CODE - FUNCTIONS
   let keyDownMap: any[] = [];
@@ -78,7 +54,7 @@ globalThis.HK = await HavokPhysics();
 
   function importPlayerMesh(scene: Scene, collider: Mesh, x: number, y: number) {
     let tempItem = { flag: false } 
-    let item: any = SceneLoader.ImportMesh("", "./models/", "dummy3.babylon", scene, function(newMeshes, particleSystems, skeletons) {
+    let item: any = SceneLoader.ImportMesh("", "./models/", "dummy3.babylon", scene, function(newMeshes, particleSystems, skeletons, animationGroups) {
       let mesh = newMeshes[0];
       let skeleton = skeletons[0];
       skeleton.animationPropertiesOverride = new AnimationPropertiesOverride();
@@ -86,71 +62,91 @@ globalThis.HK = await HavokPhysics();
       skeleton.animationPropertiesOverride.blendingSpeed = 0.05;
       skeleton.animationPropertiesOverride.loopMode = 1; 
 
-      
+      //adapted from: www.babylonjs-playground.com/#LL5BIQ#0
+      //another good playground for this is: www.babylonjs-playground.com/#AHQEIB#17
+      let idleRange: any = skeleton.getAnimationRange("YBot_Idle");
       let walkRange: any = skeleton.getAnimationRange("YBot_Walk");
       // let runRange: any = skeleton.getAnimationRange("YBot_Run");
-      // let leftRange: any = skeleton.getAnimationRange("YBot_LeftStrafeWalk");
-      // let rightRange: any = skeleton.getAnimationRange("YBot_RightStrafeWalk");
-      // let idleRange: any = skeleton.getAnimationRange("YBot_Idle");
+      //let leftRange: any = skeleton.getAnimationRange("YBot_LeftStrafeWalk");
+      //let rightRange: any = skeleton.getAnimationRange("YBot_RightStrafeWalk");
 
+      //MOVE THESE IF YOU WANT TO TRIGGER ANYWHERE
+      //let runAnim: any = scene.beginWeightedAnimation(skeleton, runRange.from, runRange.to, 1.0, true);
+      //let leftAnim: any = scene.beginWeightedAnimation(skeleton, leftRange.from, leftRange.to, 1.0, true);
+      //let rightAnim: any = scene.beginWeightedAnimation(skeleton, rightRange.from, rightRange.to, 1.0, true);
+
+      //Speed and Rotation Variables
+      let speed: number = 0.03;
+      let speedBackward: number = 0.01;
+      let rotationSpeed = 0.05;
+
+      //Animation Variables
+      let idleAnim: any;
+      let walkAnim: any;
       let animating: boolean = false;
 
       scene.onBeforeRenderObservable.add(()=> {
         let keydown: boolean = false;
-        let shiftdown: boolean = false;
         if (keyDownMap["w"] || keyDownMap["ArrowUp"]) {
-          mesh.position.z += 0.1;
-          mesh.rotation.y = 0;
+          mesh.moveWithCollisions(mesh.forward.scaleInPlace(speed));                
+          //Previous code
+          //mesh.position.z += 0.01;
+          //mesh.rotation.y = 0;
           keydown = true;
         }
         if (keyDownMap["a"] || keyDownMap["ArrowLeft"]) {
-          mesh.position.x -= 0.1;
-          mesh.rotation.y = 3 * Math.PI / 2;
+          mesh.rotate(Vector3.Up(), -rotationSpeed);
+          //Previous code
+          //mesh.position.x -= 0.01;
+          //mesh.rotation.y = 3 * Math.PI / 2;
           keydown = true;
         }
         if (keyDownMap["s"] || keyDownMap["ArrowDown"]) {
-          mesh.position.z -= 0.1;
-          mesh.rotation.y = 2 * Math.PI / 2;
+          mesh.moveWithCollisions(mesh.forward.scaleInPlace(-speedBackward));
+          //Previous code
+          //mesh.position.z -= 0.01;
+          //mesh.rotation.y = 2 * Math.PI / 2;
           keydown = true;
         }
         if (keyDownMap["d"] || keyDownMap["ArrowRight"]) {
-          mesh.position.x += 0.1;
-          mesh.rotation.y = Math.PI / 2;
+          mesh.rotate(Vector3.Up(), rotationSpeed);
+          //Previous code
+          //mesh.position.x += 0.01;
+          //mesh.rotation.y = Math.PI / 2;
           keydown = true;
-        }
-        if (keyDownMap["Shift"] || keyDownMap["LeftShift"]) {
-          currentSpeed = runningSpeed;
-          shiftdown = true;
-        } else {
-          currentSpeed = walkingSpeed;
-          shiftdown = false;
         }
 
         if (keydown) {
           if (!animating) {
-            animating = true;
-            scene.beginAnimation(skeleton, walkRange.from, walkRange.to, true);
+              animating = true;
+              idleAnim = scene.stopAnimation(skeleton);
+              walkAnim = scene.beginWeightedAnimation(skeleton, walkRange.from, walkRange.to, 1.0, true);
+          }
+          if (animating) {
+            walkAnim = scene.beginWeightedAnimation(skeleton, walkRange.from, walkRange.to, 1.0, true);
           }
         } else {
-          animating = false;
-          scene.stopAnimation(skeleton);
+          if (animating && !keydown) {
+            animating = false;
+            idleAnim = scene.beginWeightedAnimation(skeleton, idleRange.from, idleRange.to, 1.0, true);
+          }
+          if (!animating && !keydown) {
+            idleAnim = scene.beginWeightedAnimation(skeleton, idleRange.from, idleRange.to, 1.0, true);
+          }
         }
+
         //collision
         if (mesh.intersectsMesh(collider)) {
           console.log("COLLIDED");
-         } 
-
+        }
       });
-      
+
       //physics collision
       item = mesh;
-      let playerAggregate = new PhysicsAggregate(item, PhysicsShapeType.CAPSULE, { mass: 0
-      }, scene);
-      playerAggregate.body.disablePreStep = false; 
+      let playerAggregate = new PhysicsAggregate(item, PhysicsShapeType.CAPSULE, { mass: 0 }, scene);
+      playerAggregate.body.disablePreStep = false;
 
     });
-   
-
     return item;
   }
 
@@ -174,15 +170,23 @@ globalThis.HK = await HavokPhysics();
         function(evt) {keyDownMap[evt.sourceEvent.key] = false; }
       )
     );
-    scene.collisionsEnabled = true;
-    
     return scene.actionManager;
   } 
 
-  //Create more detailed ground
-
-
-  
+  function createBox(scene: Scene, x: number, y: number, z: number) {
+    let box: Mesh = MeshBuilder.CreateBox("box", { });
+    box.position.x = x;
+    box.position.y = y;
+    box.position.z = z;
+    const boxAggregate = new PhysicsAggregate(box, PhysicsShapeType.BOX, { mass: 1 }, scene);
+    return box;
+  }
+    
+  function createGround(scene: Scene) {
+    const ground: Mesh = MeshBuilder.CreateGround("ground", {height: 10, width: 10, subdivisions: 4});
+    const groundAggregate = new PhysicsAggregate(ground, PhysicsShapeType.BOX, { mass: 0 }, scene);
+    return ground;
+  }
 
   //----------------------------------------------------------------------------------------------
   //Create Skybox
@@ -265,8 +269,8 @@ globalThis.HK = await HavokPhysics();
   export default function createStartScene(engine: Engine) {
     interface SceneData {
       scene: Scene;
-      ground?: Mesh;
       box?: Mesh;
+      ground?: Mesh;
       importMesh?: any;
       actionManager?: any;
       skybox?: Mesh;
@@ -277,24 +281,21 @@ globalThis.HK = await HavokPhysics();
   
     let that: SceneData = { scene: new Scene(engine) };
     that.scene.debugLayer.show();
-    //initilazie physics
+    //initialise physics
     that.scene.enablePhysics(new Vector3(0, -9.8, 0), havokPlugin);
+    //----------------------------------------------------------
 
     //any further code goes here-----------
+    that.box = createBox(that.scene, 2, 2, 2);
+    that.ground = createGround(that.scene);
 
+    that.importMesh = importPlayerMesh(that.scene, that.box, 0, 0);
     that.actionManager = actionManager(that.scene);
 
-
-    
-    //objects
-    that.ground = createGround(that.scene);
-    that.box = createBox(that.scene, 2, 2, 2);
     that.skybox = createSkybox(that.scene);
-    that.importMesh = importPlayerMesh(that.scene, that.box, 0, 0);
     //Scene Lighting & Camera
     that.hemisphericLight = createHemiLight(that.scene);
     that.camera = createArcRotateCamera(that.scene);
-          
     return that;
   }
   //----------------------------------------------------

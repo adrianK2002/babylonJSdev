@@ -406,8 +406,19 @@ function actionManager(scene: Scene){
  } 
 
 function ufo(scene: Scene) {
-  let item: any = SceneLoader.ImportMesh("", "models/", "ufo.glb", scene, function (meshes) {          
+  let item: any = SceneLoader.ImportMesh("", "models/", "ufo.glb", scene, function (meshes) {    
+    item.position.x = 10;   
+    item.position.y = 10;
+    item.position.z = 5;
+    var alpha = 0;
+    // scene.registerBeforeRender(function () {
+    //   // item.rotation.x += 0.01;
+    //   // item.rotation.z += 0.02;
   
+    //   // item.position = new Vector3(Math.cos(alpha) * 20, 10, Math.sin(alpha) * 20);
+    //   // alpha += 0.01;
+  
+    // });
     return item;
 });
 
@@ -456,7 +467,7 @@ function ufo(scene: Scene) {
     that.skybox = createSkyBox(that.scene);
     that.camera = createArcRotateCamera(that.scene);
     that.importMesh = importPlayerMesh(that.scene, 0, 0);
-    that.importMesh = ufo(that.scene);
+    that.importMesh = ufo(that.scene)
     that.actionManager = actionManager(that.scene);
     that.sphere = createSphere(that.scene, true);
     that.light = createAnyLight(that.scene, 2, 0, 5, 0, 0.12, 0.64, 0.86, that.sphere);

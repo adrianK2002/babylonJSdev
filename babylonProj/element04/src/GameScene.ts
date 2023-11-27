@@ -57,7 +57,7 @@ import {
 
   function importPlayerMesh(scene: Scene, collider: Mesh, x: number, y: number) {
     let tempItem = { flag: false } 
-    let item: any = SceneLoader.ImportMesh("", "./models/", "dummy3.babylon", scene, function(newMeshes, particleSystems, skeletons) {
+    let item: any = SceneLoader.ImportMesh("", "./models/", "dummy3.babylon", scene, function(newMeshes, particleSystems, skeletons, animationGroups) {
       let mesh = newMeshes[0];
       let skeleton = skeletons[0];
       skeleton.animationPropertiesOverride = new AnimationPropertiesOverride();
@@ -65,53 +65,77 @@ import {
       skeleton.animationPropertiesOverride.blendingSpeed = 0.05;
       skeleton.animationPropertiesOverride.loopMode = 1; 
 
+      //adapted from: www.babylonjs-playground.com/#LL5BIQ#0
+      //another good playground for this is: www.babylonjs-playground.com/#AHQEIB#17
+      let idleRange: any = skeleton.getAnimationRange("YBot_Idle");
       let walkRange: any = skeleton.getAnimationRange("YBot_Walk");
       // let runRange: any = skeleton.getAnimationRange("YBot_Run");
-      // let leftRange: any = skeleton.getAnimationRange("YBot_LeftStrafeWalk");
-      // let rightRange: any = skeleton.getAnimationRange("YBot_RightStrafeWalk");
-      // let idleRange: any = skeleton.getAnimationRange("YBot_Idle");
+      //let leftRange: any = skeleton.getAnimationRange("YBot_LeftStrafeWalk");
+      //let rightRange: any = skeleton.getAnimationRange("YBot_RightStrafeWalk");
 
+      //MOVE THESE IF YOU WANT TO TRIGGER ANYWHERE
+      //let runAnim: any = scene.beginWeightedAnimation(skeleton, runRange.from, runRange.to, 1.0, true);
+      //let leftAnim: any = scene.beginWeightedAnimation(skeleton, leftRange.from, leftRange.to, 1.0, true);
+      //let rightAnim: any = scene.beginWeightedAnimation(skeleton, rightRange.from, rightRange.to, 1.0, true);
+
+      //Speed and Rotation Variables
+      let speed: number = 0.03;
+      let speedBackward: number = 0.01;
+      let rotationSpeed = 0.05;
+
+      //Animation Variables
+      let idleAnim: any;
+      let walkAnim: any;
       let animating: boolean = false;
 
       scene.onBeforeRenderObservable.add(()=> {
         let keydown: boolean = false;
-        let shiftdown: boolean = false;
         if (keyDownMap["w"] || keyDownMap["ArrowUp"]) {
-          mesh.position.z += 0.1;
-          mesh.rotation.y = 0;
+          mesh.moveWithCollisions(mesh.forward.scaleInPlace(speed));                
+          //Previous code
+          //mesh.position.z += 0.01;
+          //mesh.rotation.y = 0;
           keydown = true;
         }
         if (keyDownMap["a"] || keyDownMap["ArrowLeft"]) {
-          mesh.position.x -= 0.1;
-          mesh.rotation.y = 3 * Math.PI / 2;
+          mesh.rotate(Vector3.Up(), -rotationSpeed);
+          //Previous code
+          //mesh.position.x -= 0.01;
+          //mesh.rotation.y = 3 * Math.PI / 2;
           keydown = true;
         }
         if (keyDownMap["s"] || keyDownMap["ArrowDown"]) {
-          mesh.position.z -= 0.1;
-          mesh.rotation.y = 2 * Math.PI / 2;
+          mesh.moveWithCollisions(mesh.forward.scaleInPlace(-speedBackward));
+          //Previous code
+          //mesh.position.z -= 0.01;
+          //mesh.rotation.y = 2 * Math.PI / 2;
           keydown = true;
         }
         if (keyDownMap["d"] || keyDownMap["ArrowRight"]) {
-          mesh.position.x += 0.1;
-          mesh.rotation.y = Math.PI / 2;
+          mesh.rotate(Vector3.Up(), rotationSpeed);
+          //Previous code
+          //mesh.position.x += 0.01;
+          //mesh.rotation.y = Math.PI / 2;
           keydown = true;
-        }
-        if (keyDownMap["Shift"] || keyDownMap["LeftShift"]) {
-          currentSpeed = runningSpeed;
-          shiftdown = true;
-        } else {
-          currentSpeed = walkingSpeed;
-          shiftdown = false;
         }
 
         if (keydown) {
           if (!animating) {
-            animating = true;
-            scene.beginAnimation(skeleton, walkRange.from, walkRange.to, true);
+              animating = true;
+              idleAnim = scene.stopAnimation(skeleton);
+              walkAnim = scene.beginWeightedAnimation(skeleton, walkRange.from, walkRange.to, 1.0, true);
+          }
+          if (animating) {
+            walkAnim = scene.beginWeightedAnimation(skeleton, walkRange.from, walkRange.to, 1.0, true);
           }
         } else {
-          animating = false;
-          scene.stopAnimation(skeleton);
+          if (animating && !keydown) {
+            animating = false;
+            idleAnim = scene.beginWeightedAnimation(skeleton, idleRange.from, idleRange.to, 1.0, true);
+          }
+          if (!animating && !keydown) {
+            idleAnim = scene.beginWeightedAnimation(skeleton, idleRange.from, idleRange.to, 1.0, true);
+          }
         }
 
         //collision
