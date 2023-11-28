@@ -34,8 +34,20 @@ import {
   import * as GUI from "@babylonjs/gui";
   import HavokPhysics from "@babylonjs/havok";
   import { HavokPlugin, PhysicsAggregate, PhysicsShapeType } from "@babylonjs/core";
+  import { TextBlock } from "@babylonjs/gui";
   //----------------------------------------------------
-  
+  // Create a scoring variable
+let score = 0;
+let scoreText: TextBlock;
+// Function to increase the score
+function increaseScore(): void {
+  score += 1;
+  scoreText.text = "Score: " + score;
+  console.log('Score: ' + score);
+  // Additional logic based on your requirements
+}
+
+
   //----------------------------------------------------
   //Initialisation of Physics (Havok)
   let initializedHavok;
@@ -48,6 +60,11 @@ import {
 
   globalThis.HK = await HavokPhysics();
   //-----------------------------------------------------
+
+  
+
+
+
 
   //MIDDLE OF CODE - FUNCTIONS
   let keyDownMap: any[] = [];
@@ -140,8 +157,9 @@ import {
 
         //collision
         if (mesh.intersectsMesh(collider)) {
-          console.log("COLLIDED");
-        }
+          console.log("Collision detected!");
+          increaseScore();
+      }
       });
 
       //physics collision
@@ -173,7 +191,9 @@ import {
         function(evt) {keyDownMap[evt.sourceEvent.key] = false; }
       )
     );
+    
     return scene.actionManager;
+
   } 
 
   function createSphere(scene: Scene, x: number, y: number, z: number) {
@@ -236,12 +256,12 @@ import {
     const house: any = Mesh.MergeMeshes([box, roof], true, false, undefined, false, true);
     //for the UNDEFINED parameter - the BabylonJS Documentation says to use null instead of undefined but this is in JAVASCRIPT.
     //TypeScript does not accept null.
-   // const houseAggregate = new PhysicsAggregate(house, PhysicsShapeType.BOX, { mass: 1 }, scene);
+    const houseAggregate = new PhysicsAggregate(house, PhysicsShapeType.BOX, { mass: 1 }, scene);
     return house;
   }
 
   //This is adapted from the cloning and instances from the Village tutorial in the BabylonJS Documentation
-  function cloneHouse(scene: Scene) {
+  function cloneHouse(scene: Scene, Mesh: Mesh) {
     const detached_house = createHouse(scene, 1); //.clone("clonedHouse");
     const detached_houseAggregate = new PhysicsAggregate(detached_house, PhysicsShapeType.BOX, { mass: 1 }, scene);
     detached_house.rotation.y = -Math.PI / 16;
@@ -274,6 +294,7 @@ import {
     places.push([1, -Math.PI / 3, 6, 4 ]);
     
     const houses: Mesh[] = [];
+    
     for (let i = 0; i < places.length; i++) {
       if (places[i][0] === 1) {
           houses[i] = detached_house.createInstance("house" + i);
@@ -299,11 +320,16 @@ import {
 
   function createTerrain(scene: Scene) {
     const largeGroundMat = new StandardMaterial("largeGroundMat");
-    largeGroundMat.diffuseTexture = new Texture("https://assets.babylonjs.com/environments/valleygrass.png");
-    const largeGround = MeshBuilder.CreateGroundFromHeightMap("largeGround", "https://assets.babylonjs.com/environments/villageheightmap.png", {width:150, height:150, subdivisions: 20, minHeight:0, maxHeight: 10});
+    largeGroundMat.diffuseTexture = new Texture("https://www.babylonjs-playground.com/textures/lava/lavatile.jpg");
+    const largeGround = MeshBuilder.CreateGroundFromHeightMap(
+      "largeGround",
+      "https://assets.babylonjs.com/environments/villageheightmap.png",
+      { width: 150, height: 150, subdivisions: 20, minHeight: -0.01, maxHeight: 9.99 }
+    );
     largeGround.material = largeGroundMat;
     return largeGround;
   }
+  
 
   function createGround(scene: Scene) {
     const groundMat = new StandardMaterial("groundMat");
@@ -429,6 +455,8 @@ import {
       light?: Light;
       hemisphericLight?: HemisphericLight;
       camera?: Camera;
+      
+      
     }
   
     let that: SceneData = { scene: new Scene(engine) };
@@ -436,7 +464,14 @@ import {
     //initialise physics
     that.scene.enablePhysics(new Vector3(0, -9.8, 0), havokPlugin);
     //----------------------------------------------------------
-
+    const advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+    scoreText = new TextBlock();
+    scoreText.text = "Score: " + score;
+    scoreText.color = "white";
+    scoreText.fontSize = 24;
+    scoreText.top = "20px";
+    scoreText.left = "20px";
+    advancedTexture.addControl(scoreText);
     //any further code goes here-----------
     that.house = cloneHouse(that.scene);
     //that.box = createBox(that.scene);
@@ -447,7 +482,7 @@ import {
 
     that.ground = createGround(that.scene);
     that.largeGround = createTerrain(that.scene);
-    that.tree = createTrees(that.scene);
+    //that.tree = createTrees(that.scene);
     that.importMesh = importPlayerMesh(that.scene, that.box, 0, 0);
     that.actionManager = actionManager(that.scene);
 
