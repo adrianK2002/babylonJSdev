@@ -344,6 +344,7 @@ function createGoalPosts4(scene: Scene) {
       
     
 
+        
 
 
   function createAnyLight(scene: Scene, index: number, px: number, py: number, pz: number, colX: number, colY: number, colZ: number, mesh: Mesh) {

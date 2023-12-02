@@ -42,6 +42,10 @@ import {
     music.setVolume(volume);
     return music;
   }
+  function reloadPage(): void {
+    // Reload the page
+    window.location.reload();
+}
 
   function createSceneButton(scene: Scene, name: string, index: string, x: string, y: string, advtex) {
     let button = GUI.Button.CreateSimpleButton(name, index);
@@ -68,6 +72,58 @@ import {
         advtex.addControl(button);
         return button;
  }
+
+ function createReloadButton(scene: Scene, name: string, index: string, x: string, y: string, advtex) {
+  let reloadButton = GUI.Button.CreateSimpleButton(name, index);
+  reloadButton.left = x;
+  reloadButton.top = y;
+  reloadButton.width = "160px";
+  reloadButton.height = "60px";
+  reloadButton.color = "white";
+  reloadButton.cornerRadius = 20;
+  reloadButton.background = "green";
+
+  reloadButton.onPointerUpObservable.add(() => {
+    console.log("THE BUTTON HAS BEEN CLICKED");
+    // Call the reloadPage function when the button is clicked
+    reloadPage();
+  });
+
+  advtex.addControl(reloadButton);
+  return reloadButton;
+}
+
+function createMuteButton(scene: Scene, name: string, index: string, x: string, y: string, advtex: GUI.AdvancedDynamicTexture, sound: BABYLON.Sound) {
+  let muteButton = GUI.Button.CreateSimpleButton(name, index);
+  muteButton.left = x;
+  muteButton.top = y;
+  muteButton.width = "160px";
+  muteButton.height = "60px";
+  muteButton.color = "white";
+  muteButton.cornerRadius = 20;
+  muteButton.background = "green";
+
+  let isMuted = false;
+
+  muteButton.onPointerUpObservable.add(() => {
+    console.log("THE MUTE SOUND BUTTON HAS BEEN CLICKED");
+
+    // Toggle the mute state
+    isMuted = !isMuted;
+
+    // Mute or unmute the sound based on the mute state
+    if (isMuted) {
+      console.log("Sound Muted");
+      sound.setVolume(0); // Mute the sound by setting volume to 0
+    } else {
+      console.log("Sound Unmuted");
+      sound.setVolume(1); // Unmute the sound by setting volume to 1 (or the desired volume)
+    }
+  });
+
+  advtex.addControl(muteButton);
+  return muteButton;
+}
 
   //----------------------------------------------------------------------------------------------
   //Create Skybox
@@ -153,7 +209,8 @@ import {
 
     let advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("myUI", true);
     let button1 = createSceneButton(that.scene, "but1", "Start Game", "0px", "-75px", advancedTexture);
-
+    let reloadButton = createReloadButton(that.scene, "Reload", "Reload", "0px", "0px", advancedTexture);
+    let muteButton = createMuteButton(that.scene, "Mute", "Mute", "0px", "75px", advancedTexture);
     that.skybox = createSkybox(that.scene);
     //Scene Lighting & Camera
     that.hemisphericLight = createHemiLight(that.scene);
