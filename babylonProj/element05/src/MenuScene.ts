@@ -43,6 +43,18 @@ import {
     return music;
   }
 
+  function createTerrain(scene: Scene) {
+    const largeGroundMat = new StandardMaterial("largeGroundMat");
+    largeGroundMat.diffuseTexture = new Texture("https://www.babylonjs-playground.com/textures/lava/lavatile.jpg");
+    const largeGround = MeshBuilder.CreateGroundFromHeightMap(
+      "largeGround",
+      "https://assets.babylonjs.com/environments/villageheightmap.png",
+      { width: 150, height: 150, subdivisions: 20, minHeight: -0.01, maxHeight: 9.99 }
+    );
+    largeGround.material = largeGroundMat;
+    return largeGround;
+  }
+
   function createSphere(scene: Scene, rotation: boolean) {
     const mat = new StandardMaterial("mat");
     const texture = new Texture("https://www.babylonjs-playground.com/textures/lava/lavatile.jpg");
@@ -172,6 +184,7 @@ import {
       camera?: Camera;
       music?: Sound;
       sphere?: Mesh;
+      largeGround?: Mesh;
     }
   
     let that: SceneData = { scene: new Scene(engine) };
@@ -183,6 +196,7 @@ import {
     that.sphere = createSphere(that.scene, true);
     that.skybox = createSkybox(that.scene);
     //Scene Lighting & Camera
+    that.largeGround = createTerrain(that.scene);
     that.hemisphericLight = createHemiLight(that.scene);
     that.camera = createArcRotateCamera(that.scene);
     that.music = createMusic(that.scene);

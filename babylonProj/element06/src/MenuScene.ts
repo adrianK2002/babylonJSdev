@@ -84,6 +84,18 @@ import {
     return skybox;
   }
 
+  function createTerrain(scene: Scene) {
+    const largeGroundMat = new StandardMaterial("largeGroundMat");
+    largeGroundMat.diffuseTexture = new Texture("https://www.babylonjs-playground.com/textures/lava/lavatile.jpg");
+    const largeGround = MeshBuilder.CreateGroundFromHeightMap(
+      "largeGround",
+      "https://assets.babylonjs.com/environments/villageheightmap.png",
+      { width: 150, height: 150, subdivisions: 20, minHeight: -0.01, maxHeight: 9.99 }
+    );
+    largeGround.material = largeGroundMat;
+    return largeGround;
+  }
+
   function createAnyLight(scene: Scene, index: number, px: number, py: number, pz: number, colX: number, colY: number, colZ: number, mesh: Mesh) {
     // only spotlight, point and directional can cast shadows in BabylonJS
     switch (index) {
@@ -145,6 +157,7 @@ import {
       hemisphericLight?: HemisphericLight;
       camera?: Camera;
       music?: Sound;
+      largeGround?: Mesh;
     }
   
     let that: SceneData = { scene: new Scene(engine) };
@@ -156,6 +169,7 @@ import {
 
     that.skybox = createSkybox(that.scene);
     //Scene Lighting & Camera
+    that.largeGround = createTerrain(that.scene);
     that.hemisphericLight = createHemiLight(that.scene);
     that.camera = createArcRotateCamera(that.scene);
     that.music = createMusic(that.scene);

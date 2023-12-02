@@ -39,6 +39,7 @@ import {
   // Create a scoring variable
 let score = 0;
 let scoreText: TextBlock;
+let gameOverText: TextBlock;
 // Function to increase the score
 function increaseScore(): void {
   score += 1;
@@ -61,8 +62,22 @@ function increaseScore(): void {
   globalThis.HK = await HavokPhysics();
   //-----------------------------------------------------
 
-  
+  function reloadPage(): void {
+    // Reload the page
+    window.location.reload();
+}
+function checkGameOver(scene: Scene, sphere: Mesh, ground: Mesh): boolean {
+  const spherePosition = sphere.position;
+  const groundPosition = ground.position;
 
+  // Adjust the threshold based on your ground position and sphere size
+  const threshold = groundPosition.y + sphere.scaling.y / 2;
+
+  if (spherePosition.y < threshold) {
+    return true;
+  }
+  return false;
+}
 
 
 
@@ -136,23 +151,27 @@ function increaseScore(): void {
           keydown = true;
         }
 
-        if (keydown) {
+        let isPlaying: boolean = false;
+        if (keydown && !isPlaying) {
           if (!animating) {
-              animating = true;
               idleAnim = scene.stopAnimation(skeleton);
               walkAnim = scene.beginWeightedAnimation(skeleton, walkRange.from, walkRange.to, 1.0, true);
+              animating = true;
           }
           if (animating) {
-            walkAnim = scene.beginWeightedAnimation(skeleton, walkRange.from, walkRange.to, 1.0, true);
+            //walkAnim = scene.beginWeightedAnimation(skeleton, walkRange.from, walkRange.to, 1.0, true);
+            isPlaying = true;
           }
         } else {
           if (animating && !keydown) {
+            walkAnim = scene.stopAnimation(skeleton);
+            idleAnim = scene.beginWeightedAnimation(skeleton, idleRange.from, idleRange.to, 1.0, true);
             animating = false;
-            idleAnim = scene.beginWeightedAnimation(skeleton, idleRange.from, idleRange.to, 1.0, true);
+            isPlaying = false;
           }
-          if (!animating && !keydown) {
-            idleAnim = scene.beginWeightedAnimation(skeleton, idleRange.from, idleRange.to, 1.0, true);
-          }
+          // if (!animating && !keydown) {
+          //   idleAnim = scene.beginWeightedAnimation(skeleton, idleRange.from, idleRange.to, 1.0, true);
+          // }
         }
 
         //collision
@@ -167,6 +186,7 @@ function increaseScore(): void {
       let playerAggregate = new PhysicsAggregate(item, PhysicsShapeType.CAPSULE, { mass: 0 }, scene);
       playerAggregate.body.disablePreStep = false;
 
+      
     });
     return item;
   }
@@ -191,18 +211,46 @@ function increaseScore(): void {
         function(evt) {keyDownMap[evt.sourceEvent.key] = false; }
       )
     );
-    
     return scene.actionManager;
-
   } 
 
   function createSphere(scene: Scene, x: number, y: number, z: number) {
+    const mat = new StandardMaterial("mat");
+  const texture = new Texture("https://www.babylonjs-playground.com/textures/fur.jpg");
     let sphere: Mesh = MeshBuilder.CreateSphere("sphere", { });
+    mat.diffuseTexture = texture;
     sphere.position.x = x;
     sphere.position.y = y;
     sphere.position.z = z;
      const sphereAggregate = new PhysicsAggregate(sphere, PhysicsShapeType.SPHERE, { mass: 1 }, scene);
+     sphere.material = mat;
     return sphere;
+  }
+
+  function createSphere1(scene: Scene, rotation: boolean) {
+    const mat = new StandardMaterial("mat");
+    const texture = new Texture("https://www.babylonjs-playground.com/textures/lava/lavatile.jpg");
+    mat.diffuseTexture = texture;
+    let sphere1 = MeshBuilder.CreateSphere(
+      "sphere",
+      { diameter: 2, segments: 32 },
+      scene,
+    );
+    sphere1.position = new Vector3(10, 20, 10);
+    sphere1.material = mat;
+    
+    var alpha = 0;
+    scene.registerBeforeRender(function () {
+      sphere1.rotation.x += 0.01;
+      sphere1.rotation.z += 0.02;
+  
+      sphere1.position = new Vector3(Math.cos(alpha) * 20, 10, Math.sin(alpha) * 20);
+      alpha += 0.01;
+  
+    });
+    
+  
+    return sphere1;
   }
 
   function createBox(scene: Scene, width: number) {
@@ -455,6 +503,7 @@ function increaseScore(): void {
       light?: Light;
       hemisphericLight?: HemisphericLight;
       camera?: Camera;
+      sphere1?: Mesh;
       
       
     }
@@ -468,10 +517,48 @@ function increaseScore(): void {
     scoreText = new TextBlock();
     scoreText.text = "Score: " + score;
     scoreText.color = "white";
-    scoreText.fontSize = 24;
-    scoreText.top = "20px";
-    scoreText.left = "20px";
+    scoreText.fontSize = 36; // Increase font size for better visibility
+    scoreText.textHorizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT; // Align text to the right
+    scoreText.textVerticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP; // Align text to the top
+    scoreText.paddingTop = "20px";
+    scoreText.paddingRight = "20px";
     advancedTexture.addControl(scoreText);
+
+  // Create a button
+const reloadButton = GUI.Button.CreateImageWithCenterTextButton("reloadButton", "Reload", "textures/reload.png");
+reloadButton.width = "120px";
+reloadButton.height = "40px";
+reloadButton.color = "white";
+reloadButton.background = "green";
+reloadButton.fontSize = 14;
+reloadButton.cornerRadius = 8;
+reloadButton.thickness = 2;
+reloadButton.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+reloadButton.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
+reloadButton.top = "20px";
+reloadButton.left = "20px";
+
+//game over text
+gameOverText = new TextBlock();
+gameOverText.text = "Game Over!";
+gameOverText.color = "red";
+gameOverText.fontSize = 48;
+gameOverText.textHorizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+gameOverText.textVerticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+gameOverText.isVisible = false; // Initially hidden
+
+// Add the game over text to the GUI
+advancedTexture.addControl(gameOverText);
+// Add an event handler to the button
+reloadButton.onPointerUpObservable.add(() => {
+    // Call the reloadPage function when the button is clicked
+    reloadPage();
+});
+
+// Add the button to the GUI
+advancedTexture.addControl(reloadButton);
+
+    
     //any further code goes here-----------
     that.house = cloneHouse(that.scene);
     //that.box = createBox(that.scene);
@@ -485,11 +572,12 @@ function increaseScore(): void {
     //that.tree = createTrees(that.scene);
     that.importMesh = importPlayerMesh(that.scene, that.box, 0, 0);
     that.actionManager = actionManager(that.scene);
-
+    that.sphere1 = createSphere1(that.scene, true);
     that.skybox = createSkybox(that.scene);
     //Scene Lighting & Camera
     that.hemisphericLight = createHemiLight(that.scene);
     that.camera = createArcRotateCamera(that.scene);
+    
     return that;
   }
   //----------------------------------------------------

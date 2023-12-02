@@ -54,7 +54,7 @@ import {
 
   function importPlayerMesh(scene: Scene, collider: Mesh, x: number, y: number) {
     let tempItem = { flag: false } 
-    let item: any = SceneLoader.ImportMesh("", "./models/", "dummy3.babylon", scene, function(newMeshes, particleSystems, skeletons, animationGroups) {
+    let item: any = SceneLoader.ImportMesh("", "./models/", "dummy3.babylon", scene, function(newMeshes, particleSystems, skeletons, animationGroups, ) {
       let mesh = newMeshes[0];
       let skeleton = skeletons[0];
       skeleton.animationPropertiesOverride = new AnimationPropertiesOverride();
@@ -116,23 +116,27 @@ import {
           keydown = true;
         }
 
-        if (keydown) {
+        let isPlaying: boolean = false;
+        if (keydown && !isPlaying) {
           if (!animating) {
-              animating = true;
               idleAnim = scene.stopAnimation(skeleton);
               walkAnim = scene.beginWeightedAnimation(skeleton, walkRange.from, walkRange.to, 1.0, true);
+              animating = true;
           }
           if (animating) {
-            walkAnim = scene.beginWeightedAnimation(skeleton, walkRange.from, walkRange.to, 1.0, true);
+            //walkAnim = scene.beginWeightedAnimation(skeleton, walkRange.from, walkRange.to, 1.0, true);
+            isPlaying = true;
           }
         } else {
           if (animating && !keydown) {
+            walkAnim = scene.stopAnimation(skeleton);
+            idleAnim = scene.beginWeightedAnimation(skeleton, idleRange.from, idleRange.to, 1.0, true);
             animating = false;
-            idleAnim = scene.beginWeightedAnimation(skeleton, idleRange.from, idleRange.to, 1.0, true);
+            isPlaying = false;
           }
-          if (!animating && !keydown) {
-            idleAnim = scene.beginWeightedAnimation(skeleton, idleRange.from, idleRange.to, 1.0, true);
-          }
+          // if (!animating && !keydown) {
+          //   idleAnim = scene.beginWeightedAnimation(skeleton, idleRange.from, idleRange.to, 1.0, true);
+          // }
         }
 
         //collision
@@ -173,20 +177,34 @@ import {
     return scene.actionManager;
   } 
 
-  function createBox(scene: Scene, x: number, y: number, z: number) {
-    let box: Mesh = MeshBuilder.CreateBox("box", { });
-    box.position.x = x;
-    box.position.y = y;
-    box.position.z = z;
-    const boxAggregate = new PhysicsAggregate(box, PhysicsShapeType.BOX, { mass: 1 }, scene);
-    return box;
+  function createSphere(scene: Scene, x: number, y: number, z: number, scale: number = 1) {
+    const mat = new StandardMaterial("mat");
+    const texture = new Texture("https://static.vecteezy.com/system/resources/thumbnails/007/686/503/small/black-and-white-panoramic-texture-football-background-ball-vector.jpg");
+    mat.diffuseTexture = texture;
+    let sphere: Mesh = MeshBuilder.CreateSphere("sphere", { diameter: 1 * scale });
+    
+    sphere.position.x = x;
+    sphere.position.y = y;
+    sphere.position.z = z;
+    sphere.material = mat;
+    const sphereAggregate = new PhysicsAggregate(sphere, PhysicsShapeType.SPHERE, { mass: 1 }, scene);
+    return sphere;
   }
     
-  function createGround(scene: Scene) {
-    const ground: Mesh = MeshBuilder.CreateGround("ground", {height: 10, width: 10, subdivisions: 4});
+  function createGround(scene: Scene, size: number = 10, width: number = 10, rotationAngle: number = 0) {
+    const groundMat = new StandardMaterial("groundMat");
+    groundMat.diffuseTexture = new Texture("https://t4.ftcdn.net/jpg/04/40/51/03/360_F_440510369_R1T9gwH1ZkpSBCjYDg47X2AhfL0AOOWf.jpg");
+    groundMat.diffuseTexture.hasAlpha = true;
+
+    const ground: Mesh = MeshBuilder.CreateGround("ground", { height: size, width: width, subdivisions: 4 }, scene);
+    ground.material = groundMat;
+
+    // Rotate the ground by the specified angle (in radians)
+    ground.rotate(Vector3.Up(), rotationAngle);
+
     const groundAggregate = new PhysicsAggregate(ground, PhysicsShapeType.BOX, { mass: 0 }, scene);
     return ground;
-  }
+}
 
   //----------------------------------------------------------------------------------------------
   //Create Skybox
@@ -202,6 +220,129 @@ import {
 	  skybox.material = skyboxMaterial;
     return skybox;
   }
+
+  //fence around pitch
+  function createFence1(scene: Scene) {
+        // Create a fence
+        const mat = new StandardMaterial("mat");
+        const texture = new Texture("https://ichef.bbci.co.uk/news/624/mcs/media/images/59704000/jpg/_59704491_compositeadvertswithburger.jpg");
+         mat.diffuseTexture = texture;
+        const fenceHeight = 1;
+        const fenceWidth = 0.1;
+        const fenceColor = new Color3(0.5, 0.5, 0.5);
+
+        const fence1 = MeshBuilder.CreateBox("fence1", { height: fenceHeight, width: fenceWidth, depth: 25 }, scene);
+        fence1.position = new Vector3(-7.55, fenceHeight / 2, 0);
+        fence1.material = new StandardMaterial("fenceMaterial", scene);
+        fence1.material = mat;
+        const fence1Physics = new PhysicsAggregate(fence1, PhysicsShapeType.BOX, { mass: 0 }, scene);
+    return fence1;
+  }
+
+  function createFence2(scene: Scene) {
+    const mat = new StandardMaterial("mat");
+        const texture = new Texture("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSTWGcDuakfr8DBX1bAuaRsA8ZM5oefyOkkWg&usqp=CAU");
+         mat.diffuseTexture = texture;
+    const fenceHeight = 1;
+    const fenceWidth = 0.1;
+    const fenceColor = new Color3(0.5, 0.5, 0.5);
+
+    const fence2 = MeshBuilder.CreateBox("fence2", { height: fenceHeight, width: fenceWidth, depth: 25 }, scene);
+    fence2.position = new Vector3(7.55, fenceHeight / 2, 0);
+    fence2.material = new StandardMaterial("fenceMaterial", scene);
+    const fence2Physics = new PhysicsAggregate(fence2, PhysicsShapeType.BOX, { mass: 0 }, scene);
+    fence2.material = mat;
+return fence2;
+}
+
+function createFence3(scene: Scene) {
+  const mat = new StandardMaterial("mat");
+  const texture = new Texture("https://i.guim.co.uk/img/static/sys-images/Media/Pix/pictures/2010/12/17/1292593803419/Meerkat-007.jpg?width=1200&height=630&quality=85&auto=format&fit=crop&overlay-align=bottom%2Cleft&overlay-width=100p&overlay-base64=L2ltZy9zdGF0aWMvb3ZlcmxheXMvdGctb3BpbmlvbnMtYWdlLTIwMTAucG5n&enable=upscale&s=2cec5d50f6e7d73f8adec142e7d9990f");
+   mat.diffuseTexture = texture;
+  const fenceHeight = 1;
+  const fenceWidth = 0.1;
+  const fenceColor = new Color3(0.5, 0.5, 0.5);
+   
+  const fence3 = MeshBuilder.CreateBox("fence3", { height: fenceHeight, width: 15, depth: fenceWidth }, scene);
+  fence3.position = new Vector3(0, fenceHeight / 2, 12.55);
+  fence3.material = new StandardMaterial("fenceMaterial", scene);
+  const fence3Physics = new PhysicsAggregate(fence3, PhysicsShapeType.BOX, { mass: 0 }, scene);
+  fence3.material = mat;
+
+return fence3;
+}
+
+function createFence4(scene: Scene) {
+  const mat = new StandardMaterial("mat");
+  const texture = new Texture("https://ichef.bbci.co.uk/news/624/mcs/media/images/59704000/jpg/_59704491_compositeadvertswithburger.jpg");
+   mat.diffuseTexture = texture;
+  const fenceHeight = 1;
+  const fenceWidth = 0.1;
+  const fenceColor = new Color3(0.5, 0.5, 0.5);
+
+  const fence4 = MeshBuilder.CreateBox("fence4", { height: fenceHeight, width: 15, depth: fenceWidth }, scene);
+        fence4.position = new Vector3(0, fenceHeight / 2, -12.55);
+        fence4.material = new StandardMaterial("fenceMaterial", scene);
+        fence4.material = mat;
+        const fence4Physics = new PhysicsAggregate(fence4, PhysicsShapeType.BOX, { mass: 0 }, scene);
+return fence4;
+}
+        
+// goal posts 
+function createGoalPosts1(scene: Scene) {
+  const goalPostHeight = 3;
+  const goalPostWidth = 0.2;
+  const goalPostDepth = 0.2;
+
+  // Right Goal Post
+  const GoalPost1 = MeshBuilder.CreateBox("GoalPost1", { height: goalPostHeight, width: goalPostWidth, depth: goalPostDepth }, scene);
+  GoalPost1.position = new Vector3(1.25,0,11.5); // Adjusted position
+  const GoalPost1Physics = new PhysicsAggregate(GoalPost1, PhysicsShapeType.BOX, { mass: 0 }, scene);
+  
+  return GoalPost1;
+}
+
+function createGoalPosts2(scene: Scene) {
+  const goalPostHeight = 3;
+  const goalPostWidth = 0.2;
+  const goalPostDepth = 0.2;
+
+  // Left Goal Post
+  const GoalPost2 = MeshBuilder.CreateBox("GoalPost2", { height: goalPostHeight, width: goalPostWidth, depth: goalPostDepth }, scene);
+  GoalPost2.position = new Vector3(-1.25,0,11.5);
+  const GoalPost2Physics = new PhysicsAggregate(GoalPost2, PhysicsShapeType.BOX, { mass: 0 }, scene);
+
+  return GoalPost2;
+}
+  
+function createGoalPosts3(scene: Scene) {
+  const goalPostHeight = 3;
+  const goalPostWidth = 0.2;
+  const goalPostDepth = 0.2;
+
+  // Right Goal Post
+  const GoalPost3 = MeshBuilder.CreateBox("GoalPost3", { height: goalPostHeight, width: goalPostWidth, depth: goalPostDepth }, scene);
+  GoalPost3.position = new Vector3(1.25,0,-11.5); // Adjusted position
+  const GoalPost3Physics = new PhysicsAggregate(GoalPost3, PhysicsShapeType.BOX, { mass: 0 }, scene);
+  
+  return GoalPost3;
+}
+
+function createGoalPosts4(scene: Scene) {
+  const goalPostHeight = 3;
+  const goalPostWidth = 0.2;
+  const goalPostDepth = 0.2;
+
+  // Left Goal Post
+  const GoalPost4 = MeshBuilder.CreateBox("GoalPost4", { height: goalPostHeight, width: goalPostWidth, depth: goalPostDepth }, scene);
+  GoalPost4.position = new Vector3(-1.25,0,-11.5);
+  const GoalPost4Physics = new PhysicsAggregate(GoalPost4, PhysicsShapeType.BOX, { mass: 0 }, scene);
+
+  return GoalPost4;
+}
+
+      
+    
 
 
 
@@ -269,8 +410,18 @@ import {
   export default function createStartScene(engine: Engine) {
     interface SceneData {
       scene: Scene;
-      box?: Mesh;
+      sphere?: Mesh;
       ground?: Mesh;
+      fence1?: Mesh;
+      fence2?: Mesh;
+      fence3?: Mesh;
+      fence4?: Mesh;
+      GoalPost1?: Mesh;
+      GoalPost2?: Mesh;
+      GoalPost3?: Mesh;
+      GoalPost4?: Mesh;
+      GoalPost5?: Mesh;
+      GoalPost6?: Mesh;
       importMesh?: any;
       actionManager?: any;
       skybox?: Mesh;
@@ -286,16 +437,31 @@ import {
     //----------------------------------------------------------
 
     //any further code goes here-----------
-    that.box = createBox(that.scene, 2, 2, 2);
-    that.ground = createGround(that.scene);
+    that.sphere = createSphere(that.scene, 2, 2, 2, 0.5);
+    that.ground = createGround(that.scene, 15, 25, Math.PI / 2);
 
-    that.importMesh = importPlayerMesh(that.scene, that.box, 0, 0);
+    that.importMesh = importPlayerMesh(that.scene, that.sphere, 0, 0);
     that.actionManager = actionManager(that.scene);
 
     that.skybox = createSkybox(that.scene);
     //Scene Lighting & Camera
     that.hemisphericLight = createHemiLight(that.scene);
     that.camera = createArcRotateCamera(that.scene);
+    
+    //fence
+    that.fence1 = createFence1(that.scene);
+    that.fence2 = createFence2(that.scene);
+    that.fence3 = createFence3(that.scene);
+    that.fence4 = createFence4(that.scene);
+
+     //goal posts
+    that.GoalPost1 = createGoalPosts1(that.scene);
+    that.GoalPost2 = createGoalPosts2(that.scene);
+    that.GoalPost3 = createGoalPosts3(that.scene);
+    that.GoalPost4 = createGoalPosts4(that.scene);
+    
     return that;
+
+
   }
   //----------------------------------------------------
