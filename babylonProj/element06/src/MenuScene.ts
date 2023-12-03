@@ -35,40 +35,93 @@ import {
   import HavokPhysics from "@babylonjs/havok";
   import { HavokPlugin, PhysicsAggregate, PhysicsShapeType } from "@babylonjs/core";
   //----------------------------------------------------
-  
-  function createMusic(scene: Scene) {
-    const volume = 0.075;
-    var music = new Sound("Theme", "./audio/song.mp3", scene, null, { loop: true, autoplay: true });
-    music.setVolume(volume);
-    return music;
-  }
+  let backgroundMusic: Sound;
+  let isMusicMuted: boolean = false;
+//Butons 
+function reloadPage(): void {
+  // Reload the page
+  window.location.reload();
+}
 
-  function createSceneButton(scene: Scene, name: string, index: string, x: string, y: string, advtex) {
-    let button = GUI.Button.CreateSimpleButton(name, index);
-        button.left = x;
-        button.top = y;
-        button.width = "160px";
-        button.height = "60px";
-        button.color = "white";
-        button.cornerRadius = 20;
-        button.background = "green";
-  
+function createSceneButton(scene: Scene, name: string, index: string, x: string, y: string, advtex) {
+  let button = GUI.Button.CreateSimpleButton(name, index);
+      button.left = x;
+      button.top = y;
+      button.width = "160px";
+      button.height = "60px";
+      button.color = "white";
+      button.cornerRadius = 20;
+      button.background = "green";
 
-      
-        const buttonClick = new Sound("MenuClickSFX", "./audio/menu-click.wav", scene, null, {
-          loop: false,
-          autoplay: false,
-        });
 
-        button.onPointerUpObservable.add(function() {
-            console.log("THE BUTTON HAS BEEN CLICKED");
-            buttonClick.play();
-            setSceneIndex(1);
-        });
-        advtex.addControl(button);
-        return button;
- }
+    
+      const buttonClick = new Sound("MenuClickSFX", "./audio/menu-click.wav", scene, null, {
+        loop: false,
+        autoplay: false,
+      });
 
+      button.onPointerUpObservable.add(function() {
+          console.log("THE BUTTON HAS BEEN CLICKED");
+          buttonClick.play();
+          setSceneIndex(1);
+      });
+      advtex.addControl(button);
+      return button;
+}
+
+function createReloadButton(scene: Scene, name: string, index: string, x: string, y: string, advtex) {
+let reloadButton = GUI.Button.CreateSimpleButton(name, index);
+reloadButton.left = x;
+reloadButton.top = y;
+reloadButton.width = "160px";
+reloadButton.height = "60px";
+reloadButton.color = "white";
+reloadButton.cornerRadius = 20;
+reloadButton.background = "green";
+
+reloadButton.onPointerUpObservable.add(() => {
+  console.log("THE BUTTON HAS BEEN CLICKED");
+  // Call the reloadPage function when the button is clicked
+  reloadPage();
+});
+
+advtex.addControl(reloadButton);
+return reloadButton;
+}
+
+function initializeBackgroundMusic(scene: Scene) {
+backgroundMusic = new Sound("Theme", "./audio/song.mp3", scene, null, {
+  loop: true,
+  autoplay: true,
+});
+backgroundMusic.setVolume(0.15); // Adjust the volume as needed
+}
+
+function toggleMusicMute() {
+isMusicMuted = !isMusicMuted;
+backgroundMusic.setVolume(isMusicMuted ? 0 : 0.15);
+}
+
+function createMuteButton(scene: Scene, advtex: GUI.AdvancedDynamicTexture) {
+const muteButton = GUI.Button.CreateImageWithCenterTextButton("muteButton", "Music On/Off", "textures/mute.png");
+muteButton.width = "160px";
+muteButton.height = "60px";
+muteButton.color = "white";
+muteButton.background = "red";
+muteButton.cornerRadius = 20;
+muteButton.thickness = 1;
+muteButton.top = "75px";
+muteButton.left = "0px";
+
+muteButton.onPointerUpObservable.add(() => {
+  console.log("THE MUTE BUTTON HAS BEEN CLICKED");
+  // Call the toggleMusicMute function when the mute button is clicked
+  toggleMusicMute();
+});
+
+advtex.addControl(muteButton);
+return muteButton;
+}
   //----------------------------------------------------------------------------------------------
   //Create Skybox
   function createSkybox(scene: Scene) {
@@ -166,13 +219,15 @@ import {
 
     let advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("myUI", true);
     let button1 = createSceneButton(that.scene, "but1", "Start Game", "0px", "-75px", advancedTexture);
+    let reloadButton = createReloadButton(that.scene, "Reload", "Reload", "0px", "0px", advancedTexture);
+    let muteButton = createMuteButton(that.scene, advancedTexture);
 
     that.skybox = createSkybox(that.scene);
     //Scene Lighting & Camera
     that.largeGround = createTerrain(that.scene);
     that.hemisphericLight = createHemiLight(that.scene);
     that.camera = createArcRotateCamera(that.scene);
-    that.music = createMusic(that.scene);
+    that.backgroundMusic = initializeBackgroundMusic(that.scene);
     return that;
   }
   //----------------------------------------------------

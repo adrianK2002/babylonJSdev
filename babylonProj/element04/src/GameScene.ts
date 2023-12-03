@@ -345,6 +345,42 @@ function createGoalPosts4(scene: Scene) {
   return GoalPost4;
 }
 
+function createGoalPosts5(scene: Scene, diameter: number, height: number, rotationAxis: Vector3, rotationAngle: number): Mesh {
+  const mat = new StandardMaterial("mat");
+  const color = new Color3(1, 1, 1);
+  mat.diffuseColor = color;
+  const goalPosts5 = MeshBuilder.CreateCylinder("goalPosts5", { diameter, height }, scene);
+
+  // Rotate the goal post top based on the provided axis and angle
+  goalPosts5.rotate(rotationAxis, rotationAngle);
+
+  // Adjust the position and make the cylinder longer
+  goalPosts5.position = new Vector3(0, 1.65, 11.5);
+  goalPosts5.scaling.y = 14; // Adjust the scaling factor to make the cylinder longer
+  goalPosts5.material = mat;
+  const goalPosts5Physics = new PhysicsAggregate(goalPosts5, PhysicsShapeType.CYLINDER, { mass: 0 }, scene);
+
+  return goalPosts5;
+}
+
+function createGoalPosts6(scene: Scene, diameter: number, height: number, rotationAxis: Vector3, rotationAngle: number): Mesh {
+  const mat = new StandardMaterial("mat");
+  const color = new Color3(1, 1, 1);
+  mat.diffuseColor = color;
+  const goalPosts6 = MeshBuilder.CreateCylinder("goalPosts6", { diameter, height }, scene);
+
+  // Rotate the goal post top based on the provided axis and angle
+  goalPosts6.rotate(rotationAxis, rotationAngle);
+
+  // Adjust the position and make the cylinder longer
+  goalPosts6.position = new Vector3(0, 1.65, -11.5);
+  goalPosts6.scaling.y = 14; // Adjust the scaling factor to make the cylinder longer
+  goalPosts6.material = mat;
+  const goalPosts5Physics = new PhysicsAggregate(goalPosts6, PhysicsShapeType.CYLINDER, { mass: 0 }, scene);
+
+  return goalPosts6;
+}
+
 function reloadPage(): void {
   // Reload the page
   window.location.reload();
@@ -375,7 +411,36 @@ reloadButton.width = "120px";
   return reloadButton;
 }
     
+function createSceneButton(scene: Scene, name: string, index: string, x: string, y: string, advtex) {
+  let button = GUI.Button.CreateSimpleButton(name, index);
+  button.width = "120px";
+  button.width = "120px";
+  button.height = "40px";
+  button.color = "white";
+  button.background = "green";
+  button.fontSize = 14;
+  button.cornerRadius = 8;
+  button.thickness = 2;
+  button.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+  button.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
+  button.top = "20px";
+  button.left = "150px";
 
+
+    
+      const buttonClick = new Sound("MenuClickSFX", "./audio/menu-click.wav", scene, null, {
+        loop: false,
+        autoplay: false,
+      });
+
+      button.onPointerUpObservable.add(function() {
+          console.log("THE BUTTON HAS BEEN CLICKED");
+          buttonClick.play();
+          setSceneIndex(0);
+      });
+      advtex.addControl(button);
+      return button;
+}
         
 
 
@@ -471,6 +536,7 @@ reloadButton.width = "120px";
     //reload button
     let advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("myUI", true);
     let reloadButton = createReloadButton(that.scene, "Reload", "Reload", "-500px", "-280px", advancedTexture);
+    let button1 = createSceneButton(that.scene, "but1", "Menu", "-500px", "-280px", advancedTexture);
     //any further code goes here-----------
     that.sphere = createSphere(that.scene, 2, 2, 2, 0.5);
     that.ground = createGround(that.scene, 15, 25, Math.PI / 2);
@@ -494,7 +560,9 @@ reloadButton.width = "120px";
     that.GoalPost2 = createGoalPosts2(that.scene);
     that.GoalPost3 = createGoalPosts3(that.scene);
     that.GoalPost4 = createGoalPosts4(that.scene);
-    
+    that.GoalPost5 = createGoalPosts5(that.scene, 0.4, 0.2, Vector3.Forward(), Math.PI / 2);
+    that.GoalPost6 = createGoalPosts6(that.scene, 0.4, 0.2, Vector3.Forward(), Math.PI / 2);
+
     return that;
 
 

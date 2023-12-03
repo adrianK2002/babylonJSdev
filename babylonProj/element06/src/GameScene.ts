@@ -61,22 +61,67 @@ function increaseScore(): void {
 
   globalThis.HK = await HavokPhysics();
   //-----------------------------------------------------
+  //Buttons
 
   function reloadPage(): void {
     // Reload the page
     window.location.reload();
 }
-function checkGameOver(scene: Scene, sphere: Mesh, ground: Mesh): boolean {
-  const spherePosition = sphere.position;
-  const groundPosition = ground.position;
 
-  // Adjust the threshold based on your ground position and sphere size
-  const threshold = groundPosition.y + sphere.scaling.y / 2;
+function createReloadButton(scene: Scene, name: string, index: string, x: string, y: string, advtex) {
+  const reloadButton = GUI.Button.CreateImageWithCenterTextButton("reloadButton", "Reload", "textures/reload.png");
+reloadButton.width = "120px";
+  reloadButton.width = "120px";
+  reloadButton.height = "40px";
+  reloadButton.color = "white";
+  reloadButton.background = "green";
+  reloadButton.fontSize = 14;
+  reloadButton.cornerRadius = 8;
+  reloadButton.thickness = 2;
+  reloadButton.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+  reloadButton.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
+  reloadButton.top = "20px";
+  reloadButton.left = "20px";
 
-  if (spherePosition.y < threshold) {
-    return true;
-  }
-  return false;
+  reloadButton.onPointerUpObservable.add(() => {
+    console.log("THE BUTTON HAS BEEN CLICKED");
+    // Call the reloadPage function when the button is clicked
+    reloadPage();
+  });
+
+  advtex.addControl(reloadButton);
+  return reloadButton;
+}
+    
+function createSceneButton(scene: Scene, name: string, index: string, x: string, y: string, advtex) {
+  let button = GUI.Button.CreateSimpleButton(name, index);
+  button.width = "120px";
+  button.width = "120px";
+  button.height = "40px";
+  button.color = "white";
+  button.background = "green";
+  button.fontSize = 14;
+  button.cornerRadius = 8;
+  button.thickness = 2;
+  button.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+  button.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
+  button.top = "20px";
+  button.left = "150px";
+
+
+    
+      const buttonClick = new Sound("MenuClickSFX", "./audio/menu-click.wav", scene, null, {
+        loop: false,
+        autoplay: false,
+      });
+
+      button.onPointerUpObservable.add(function() {
+          console.log("THE BUTTON HAS BEEN CLICKED");
+          buttonClick.play();
+          setSceneIndex(0);
+      });
+      advtex.addControl(button);
+      return button;
 }
 
 
@@ -87,28 +132,20 @@ function checkGameOver(scene: Scene, sphere: Mesh, ground: Mesh): boolean {
   let walkingSpeed: number = 0.1;
   let runningSpeed: number = 0.4;
 
-  function importPlayerMesh(scene: Scene, collider: Mesh, x: number, y: number) {
+  function importPlayerMesh(scene: Scene, collider: Mesh, x: number, y: number, scaleFactor: number) {
     let tempItem = { flag: false } 
     let item: any = SceneLoader.ImportMesh("", "./models/", "dummy3.babylon", scene, function(newMeshes, particleSystems, skeletons, animationGroups) {
+      
       let mesh = newMeshes[0];
       let skeleton = skeletons[0];
       skeleton.animationPropertiesOverride = new AnimationPropertiesOverride();
       skeleton.animationPropertiesOverride.enableBlending = true;
       skeleton.animationPropertiesOverride.blendingSpeed = 0.05;
       skeleton.animationPropertiesOverride.loopMode = 1; 
+      mesh.scaling = new Vector3(scaleFactor, scaleFactor, scaleFactor);
 
-      //adapted from: www.babylonjs-playground.com/#LL5BIQ#0
-      //another good playground for this is: www.babylonjs-playground.com/#AHQEIB#17
       let idleRange: any = skeleton.getAnimationRange("YBot_Idle");
       let walkRange: any = skeleton.getAnimationRange("YBot_Walk");
-      // let runRange: any = skeleton.getAnimationRange("YBot_Run");
-      //let leftRange: any = skeleton.getAnimationRange("YBot_LeftStrafeWalk");
-      //let rightRange: any = skeleton.getAnimationRange("YBot_RightStrafeWalk");
-
-      //MOVE THESE IF YOU WANT TO TRIGGER ANYWHERE
-      //let runAnim: any = scene.beginWeightedAnimation(skeleton, runRange.from, runRange.to, 1.0, true);
-      //let leftAnim: any = scene.beginWeightedAnimation(skeleton, leftRange.from, leftRange.to, 1.0, true);
-      //let rightAnim: any = scene.beginWeightedAnimation(skeleton, rightRange.from, rightRange.to, 1.0, true);
 
       //Speed and Rotation Variables
       let speed: number = 0.03;
@@ -214,11 +251,12 @@ function checkGameOver(scene: Scene, sphere: Mesh, ground: Mesh): boolean {
     return scene.actionManager;
   } 
 
-  function createSphere(scene: Scene, x: number, y: number, z: number) {
+  function createSphere(scene: Scene, x: number, y: number, z: number, scaleFactor: number) {
     const mat = new StandardMaterial("mat");
   const texture = new Texture("https://www.babylonjs-playground.com/textures/fur.jpg");
     let sphere: Mesh = MeshBuilder.CreateSphere("sphere", { });
     mat.diffuseTexture = texture;
+    sphere.scaling = new Vector3(scaleFactor, scaleFactor, scaleFactor);
     sphere.position.x = x;
     sphere.position.y = y;
     sphere.position.z = z;
@@ -298,29 +336,30 @@ function checkGameOver(scene: Scene, sphere: Mesh, ground: Mesh): boolean {
     return roof;
   }
 
-  function createHouse(scene: Scene, width: number) {
+  function createHouse(scene: Scene, width: number, px: number, py:number, pz:number) {
     const box = createBox(scene, width);
     const roof = createRoof(scene, width);
     const house: any = Mesh.MergeMeshes([box, roof], true, false, undefined, false, true);
+    house.position = new Vector3(1, 0, 10);
     //for the UNDEFINED parameter - the BabylonJS Documentation says to use null instead of undefined but this is in JAVASCRIPT.
     //TypeScript does not accept null.
-    const houseAggregate = new PhysicsAggregate(house, PhysicsShapeType.BOX, { mass: 1 }, scene);
+    const houseAggregate = new PhysicsAggregate(house, PhysicsShapeType.BOX, { mass: 0 }, scene);
     return house;
   }
 
   //This is adapted from the cloning and instances from the Village tutorial in the BabylonJS Documentation
-  function cloneHouse(scene: Scene, Mesh: Mesh) {
-    const detached_house = createHouse(scene, 1); //.clone("clonedHouse");
-    const detached_houseAggregate = new PhysicsAggregate(detached_house, PhysicsShapeType.BOX, { mass: 1 }, scene);
+  function cloneHouse(scene: Scene, Mesh: Mesh,scaleFactor: number) {
+    const detached_house = createHouse(scene, 1, 0,0,0,); //.clone("clonedHouse");
+    const detached_houseAggregate = new PhysicsAggregate(detached_house, PhysicsShapeType.BOX, { mass: 0 }, scene);
     detached_house.rotation.y = -Math.PI / 16;
     detached_house.position.x = -6.8;
     detached_house.position.z = 2.5;
-
-    const semi_house = createHouse(scene, 2); //.clone("clonedHouse");
+    detached_house.scaling = new Vector3(scaleFactor, scaleFactor, scaleFactor);
+    const semi_house = createHouse(scene, 2,0,0,0); //.clone("clonedHouse");
     semi_house .rotation.y = -Math.PI / 16;
     semi_house.position.x = -4.5;
     semi_house.position.z = 3;
-
+    semi_house.scaling = new Vector3(scaleFactor, scaleFactor, scaleFactor);
     //each entry is an array [house type, rotation, x, z]
     const places: number[] [] = []; 
     places.push([1, -Math.PI / 16, -6.8, 2.5 ]);
@@ -356,7 +395,7 @@ function checkGameOver(scene: Scene, sphere: Mesh, ground: Mesh): boolean {
         houses[i].rotation.y = places[i][1];
         houses[i].position.x = places[i][2];
         houses[i].position.z = places[i][3];
-        const housesAggregate = new PhysicsAggregate(houses[i], PhysicsShapeType.BOX, { mass: 1 }, scene);
+        const housesAggregate = new PhysicsAggregate(houses[i], PhysicsShapeType.BOX, { mass: 0 }, scene);
         
     }
     
@@ -390,26 +429,24 @@ function checkGameOver(scene: Scene, sphere: Mesh, ground: Mesh): boolean {
     return ground;
   }
 
-  function createTrees(scene: Scene) {
-    const spriteManagerTrees = new SpriteManager("treesManager", "textures/palmtree.png", 2000, {width: 512, height: 1024}, scene);
+  function createFootballPitch(scene: Scene, size: number = 10, width: number = 10,  position: Vector3 = Vector3.Zero()) {
+    const groundMat = new StandardMaterial("groundMat");
+    groundMat.diffuseTexture = new Texture("https://t4.ftcdn.net/jpg/04/40/51/03/360_F_440510369_R1T9gwH1ZkpSBCjYDg47X2AhfL0AOOWf.jpg");
+    groundMat.diffuseTexture.hasAlpha = true;
+
+    const ground1: Mesh = MeshBuilder.CreateGround("ground1", { height: size, width: width, subdivisions: 4 }, scene);
+    ground1.material = groundMat;
+
   
-      //We create trees at random positions
-      for (let i = 0; i < 500; i++) {
-          const tree = new Sprite("tree", spriteManagerTrees);
-          tree.position.x = Math.random() * (-30);
-          tree.position.z = Math.random() * 20 + 8;
-          tree.position.y = 0.5;
-      }
-  
-      for (let i = 0; i < 500; i++) {
-          const tree = new Sprite("tree", spriteManagerTrees);
-          tree.position.x = Math.random() * (25) + 7;
-          tree.position.z = Math.random() * -35  + 8;
-          tree.position.y = 0.5;
-      }
-      
-      return tree;
-  }
+
+    // Set the position of the ground
+    ground1.position = position;
+
+    const ground1Aggregate = new PhysicsAggregate(ground1, PhysicsShapeType.BOX, { mass: 0 }, scene);
+    return ground1;
+}
+
+
 
   //----------------------------------------------------------------------------------------------
   //Create Skybox
@@ -426,7 +463,95 @@ function checkGameOver(scene: Scene, sphere: Mesh, ground: Mesh): boolean {
     return skybox;
   }
 
+// goal posts 
+function createGoalPosts1(scene: Scene) {
+  const goalPostHeight = 3;
+  const goalPostWidth = 0.2;
+  const goalPostDepth = 0.2;
 
+  // Right Goal Post
+  const GoalPost1 = MeshBuilder.CreateBox("GoalPost1", { height: goalPostHeight, width: goalPostWidth, depth: goalPostDepth }, scene);
+  GoalPost1.position = new Vector3(-11.5,0,-7); // Adjusted position
+  const GoalPost1Physics = new PhysicsAggregate(GoalPost1, PhysicsShapeType.BOX, { mass: 0 }, scene);
+  
+  return GoalPost1;
+}
+
+function createGoalPosts2(scene: Scene) {
+  const goalPostHeight = 3;
+  const goalPostWidth = 0.2;
+  const goalPostDepth = 0.2;
+
+  // Left Goal Post
+  const GoalPost2 = MeshBuilder.CreateBox("GoalPost2", { height: goalPostHeight, width: goalPostWidth, depth: goalPostDepth }, scene);
+  GoalPost2.position = new Vector3(-11.5,0,-9);
+  const GoalPost2Physics = new PhysicsAggregate(GoalPost2, PhysicsShapeType.BOX, { mass: 0 }, scene);
+
+  return GoalPost2;
+}
+  
+function createGoalPosts3(scene: Scene) {
+  const goalPostHeight = 3;
+  const goalPostWidth = 0.2;
+  const goalPostDepth = 0.2;
+
+  // Right Goal Post
+  const GoalPost3 = MeshBuilder.CreateBox("GoalPost3", { height: goalPostHeight, width: goalPostWidth, depth: goalPostDepth }, scene);
+  GoalPost3.position = new Vector3(-0.5,0,-9); // Adjusted position
+  const GoalPost3Physics = new PhysicsAggregate(GoalPost3, PhysicsShapeType.BOX, { mass: 0 }, scene);
+  
+  return GoalPost3;
+}
+
+function createGoalPosts4(scene: Scene) {
+  const goalPostHeight = 3;
+  const goalPostWidth = 0.2;
+  const goalPostDepth = 0.2;
+
+  // Left Goal Post
+  const GoalPost4 = MeshBuilder.CreateBox("GoalPost4", { height: goalPostHeight, width: goalPostWidth, depth: goalPostDepth }, scene);
+  GoalPost4.position = new Vector3(-0.5,0,-7);
+  const GoalPost4Physics = new PhysicsAggregate(GoalPost4, PhysicsShapeType.BOX, { mass: 0 }, scene);
+
+  return GoalPost4;
+}
+
+// function createGoalPosts5(scene: Scene, diameter: number, height: number, rotationAxis: Vector3, rotationAngle: number): Mesh {
+//   const mat = new StandardMaterial("mat");
+//   const color = new Color3(1, 1, 1);
+//   mat.diffuseColor = color;
+//   const goalPosts5 = MeshBuilder.CreateCylinder("goalPosts5", { diameter, height }, scene);
+
+//   // Rotate the goal post top based on the provided axis and angle
+//   goalPosts5.rotate(rotationAxis, rotationAngle);
+
+//   // Adjust the position and make the cylinder longer
+//   goalPosts5.position = new Vector3(-0.5, 1.65, -7);
+//   goalPosts5.scaling.y = 14; // Adjust the scaling factor to make the cylinder longer
+//   goalPosts5.rotation.x = Math.PI / 3;
+//   goalPosts5.material = mat;
+//   const goalPosts5Physics = new PhysicsAggregate(goalPosts5, PhysicsShapeType.CYLINDER, { mass: 0 }, scene);
+
+//   return goalPosts5;
+// }
+
+// function createGoalPosts6(scene: Scene, diameter: number, height: number, rotationAxis: Vector3, rotationAngle: number): Mesh {
+//   const mat = new StandardMaterial("mat");
+//   const color = new Color3(1, 1, 1);
+//   mat.diffuseColor = color;
+//   const goalPosts6 = MeshBuilder.CreateCylinder("goalPosts6", { diameter, height }, scene);
+
+//   // Rotate the goal post top based on the provided axis and angle
+//   goalPosts6.rotate(rotationAxis, rotationAngle);
+
+//   // Adjust the position and make the cylinder longer
+//   goalPosts6.position = new Vector3(-11.5, 1.65, -9);
+//   goalPosts6.scaling.y = 14; // Adjust the scaling factor to make the cylinder longer
+//   goalPosts6.material = mat;
+//   const goalPosts6Physics = new PhysicsAggregate(goalPosts6, PhysicsShapeType.CYLINDER, { mass: 0 }, scene);
+
+//   return goalPosts6;
+// }
 
   function createAnyLight(scene: Scene, index: number, px: number, py: number, pz: number, colX: number, colY: number, colZ: number, mesh: Mesh) {
     // only spotlight, point and directional can cast shadows in BabylonJS
@@ -495,9 +620,16 @@ function checkGameOver(scene: Scene, sphere: Mesh, ground: Mesh): boolean {
       box?: Mesh;
       sphere?: Mesh;
       ground?: Mesh;
+      ground1?: Mesh;
       largeGround?: Mesh;
       importMesh?: any;
       tree?: Sprite;
+      GoalPost1?: Mesh;
+      GoalPost2?: Mesh;
+      GoalPost3?: Mesh;
+      GoalPost4?: Mesh;
+      GoalPost5?: Mesh;
+      GoalPost6?: Mesh;
       actionManager?: any;
       skybox?: Mesh;
       light?: Light;
@@ -524,60 +656,36 @@ function checkGameOver(scene: Scene, sphere: Mesh, ground: Mesh): boolean {
     scoreText.paddingRight = "20px";
     advancedTexture.addControl(scoreText);
 
-  // Create a button
-const reloadButton = GUI.Button.CreateImageWithCenterTextButton("reloadButton", "Reload", "textures/reload.png");
-reloadButton.width = "120px";
-reloadButton.height = "40px";
-reloadButton.color = "white";
-reloadButton.background = "green";
-reloadButton.fontSize = 14;
-reloadButton.cornerRadius = 8;
-reloadButton.thickness = 2;
-reloadButton.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
-reloadButton.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
-reloadButton.top = "20px";
-reloadButton.left = "20px";
-
-//game over text
-gameOverText = new TextBlock();
-gameOverText.text = "Game Over!";
-gameOverText.color = "red";
-gameOverText.fontSize = 48;
-gameOverText.textHorizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
-gameOverText.textVerticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
-gameOverText.isVisible = false; // Initially hidden
-
-// Add the game over text to the GUI
-advancedTexture.addControl(gameOverText);
-// Add an event handler to the button
-reloadButton.onPointerUpObservable.add(() => {
-    // Call the reloadPage function when the button is clicked
-    reloadPage();
-});
-
-// Add the button to the GUI
-advancedTexture.addControl(reloadButton);
-
+  
+    
+    let reloadButton = createReloadButton(that.scene, "Reload", "Reload", "-500px", "-280px", advancedTexture);
+    let button1 = createSceneButton(that.scene, "but1", "Menu", "-500px", "-280px", advancedTexture);
     
     //any further code goes here-----------
-    that.house = cloneHouse(that.scene);
-    //that.box = createBox(that.scene);
-    //that.roof = createRoof(that.scene);
-    //that.house = createHouse(that.scene, 2); 
-    //const house = Mesh.MergeMeshes([that.box, that.roof], true, false, undefined, false, true);
-    that.box = createSphere(that.scene, 2, 2, 2);
+    that.house = cloneHouse(that.scene, 0,1.1);
+
+    that.box = createSphere(that.scene, 2, 2, 2,0.5);
 
     that.ground = createGround(that.scene);
+    that.ground1 = createFootballPitch(that.scene, 10, 12, new Vector3(-6, 0.01, -8));
     that.largeGround = createTerrain(that.scene);
-    //that.tree = createTrees(that.scene);
-    that.importMesh = importPlayerMesh(that.scene, that.box, 0, 0);
+    that.importMesh = importPlayerMesh(that.scene, that.box, 0, 0, 0.8);
     that.actionManager = actionManager(that.scene);
     that.sphere1 = createSphere1(that.scene, true);
     that.skybox = createSkybox(that.scene);
     //Scene Lighting & Camera
     that.hemisphericLight = createHemiLight(that.scene);
     that.camera = createArcRotateCamera(that.scene);
-    
+    //goal posts
+    that.GoalPost1 = createGoalPosts1(that.scene);
+    that.GoalPost2 = createGoalPosts2(that.scene);
+    that.GoalPost3 = createGoalPosts3(that.scene);
+    that.GoalPost4 = createGoalPosts4(that.scene);
+    // that.GoalPost5 = createGoalPosts5(that.scene, 0.4, 0.2, Vector3.Forward(), Math.PI / 2);
+    // that.GoalPost6 = createGoalPosts6(that.scene, 0.4, 0.2, Vector3.Forward(), Math.PI / 2);
+
+
+
     return that;
   }
   //----------------------------------------------------

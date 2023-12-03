@@ -36,12 +36,15 @@ import {
   import { HavokPlugin, PhysicsAggregate, PhysicsShapeType } from "@babylonjs/core";
   //----------------------------------------------------
   
-  function createMusic(scene: Scene) {
-    const volume = 0.075;
-    var music = new Sound("Theme", "./audio/song.mp3", scene, null, { loop: true, autoplay: true });
-    music.setVolume(volume);
-    return music;
-  }
+  let backgroundMusic: Sound;
+  let isMusicMuted: boolean = false;
+
+  // function createMusic(scene: Scene) {
+  //   const setvolume = 0.075;
+  //   var music = new Sound("Theme", "./audio/song.mp3", scene, null, { loop: true, autoplay: true });
+  //   music.setVolume(setvolume);
+  //   return music;
+  // }
   function reloadPage(): void {
     // Reload the page
     window.location.reload();
@@ -93,32 +96,34 @@ import {
   return reloadButton;
 }
 
-function createMuteButton(scene: Scene, name: string, index: string, x: string, y: string, advtex: GUI.AdvancedDynamicTexture, sound: BABYLON.Sound) {
-  let muteButton = GUI.Button.CreateSimpleButton(name, index);
-  muteButton.left = x;
-  muteButton.top = y;
+function initializeBackgroundMusic(scene: Scene) {
+  backgroundMusic = new Sound("Theme", "./audio/song.mp3", scene, null, {
+    loop: true,
+    autoplay: true,
+  });
+  backgroundMusic.setVolume(0.15); // Adjust the volume as needed
+}
+
+function toggleMusicMute() {
+  isMusicMuted = !isMusicMuted;
+  backgroundMusic.setVolume(isMusicMuted ? 0 : 0.15);
+}
+
+function createMuteButton(scene: Scene, advtex: GUI.AdvancedDynamicTexture) {
+  const muteButton = GUI.Button.CreateImageWithCenterTextButton("muteButton", "Music On/Off", "textures/mute.png");
   muteButton.width = "160px";
   muteButton.height = "60px";
   muteButton.color = "white";
+  muteButton.background = "red";
   muteButton.cornerRadius = 20;
-  muteButton.background = "green";
-
-  let isMuted = false;
+  muteButton.thickness = 1;
+  muteButton.top = "75px";
+  muteButton.left = "0px";
 
   muteButton.onPointerUpObservable.add(() => {
-    console.log("THE MUTE SOUND BUTTON HAS BEEN CLICKED");
-
-    // Toggle the mute state
-    isMuted = !isMuted;
-
-    // Mute or unmute the sound based on the mute state
-    if (isMuted) {
-      console.log("Sound Muted");
-      sound.setVolume(0); // Mute the sound by setting volume to 0
-    } else {
-      console.log("Sound Unmuted");
-      sound.setVolume(1); // Unmute the sound by setting volume to 1 (or the desired volume)
-    }
+    console.log("THE MUTE BUTTON HAS BEEN CLICKED");
+    // Call the toggleMusicMute function when the mute button is clicked
+    toggleMusicMute();
   });
 
   advtex.addControl(muteButton);
@@ -200,7 +205,7 @@ function createMuteButton(scene: Scene, name: string, index: string, x: string, 
       light?: Light;
       hemisphericLight?: HemisphericLight;
       camera?: Camera;
-      music?: Sound;
+      backgroundMusic?: Sound;
     }
   
     let that: SceneData = { scene: new Scene(engine) };
@@ -210,12 +215,12 @@ function createMuteButton(scene: Scene, name: string, index: string, x: string, 
     let advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("myUI", true);
     let button1 = createSceneButton(that.scene, "but1", "Start Game", "0px", "-75px", advancedTexture);
     let reloadButton = createReloadButton(that.scene, "Reload", "Reload", "0px", "0px", advancedTexture);
-    let muteButton = createMuteButton(that.scene, "Mute", "Mute", "0px", "75px", advancedTexture);
+    let muteButton = createMuteButton(that.scene, advancedTexture);
     that.skybox = createSkybox(that.scene);
     //Scene Lighting & Camera
     that.hemisphericLight = createHemiLight(that.scene);
     that.camera = createArcRotateCamera(that.scene);
-    that.music = createMusic(that.scene);
+    that.backgroundMusic = initializeBackgroundMusic(that.scene);
     return that;
   }
   //----------------------------------------------------

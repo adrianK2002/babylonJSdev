@@ -223,7 +223,7 @@ import {
 
   //fence around pitch
   function createFence1(scene: Scene) {
-        // Create a fence
+        
         const mat = new StandardMaterial("mat");
         const texture = new Texture("https://ichef.bbci.co.uk/news/624/mcs/media/images/59704000/jpg/_59704491_compositeadvertswithburger.jpg");
          mat.diffuseTexture = texture;
@@ -290,32 +290,43 @@ return fence4;
         
 // goal posts 
 function createGoalPosts1(scene: Scene) {
+  const mat = new StandardMaterial("mat");
+  const color = new Color3(1, 1, 1);
+  mat.diffuseColor = color;
   const goalPostHeight = 3;
   const goalPostWidth = 0.2;
   const goalPostDepth = 0.2;
 
-  // Right Goal Post
+ 
   const GoalPost1 = MeshBuilder.CreateBox("GoalPost1", { height: goalPostHeight, width: goalPostWidth, depth: goalPostDepth }, scene);
   GoalPost1.position = new Vector3(1.25,0,11.5); // Adjusted position
+  GoalPost1.material = mat;
   const GoalPost1Physics = new PhysicsAggregate(GoalPost1, PhysicsShapeType.BOX, { mass: 0 }, scene);
   
   return GoalPost1;
 }
 
 function createGoalPosts2(scene: Scene) {
+  const mat = new StandardMaterial("mat");
+  const color = new Color3(1, 1, 1);
+  mat.diffuseColor = color;
   const goalPostHeight = 3;
   const goalPostWidth = 0.2;
   const goalPostDepth = 0.2;
 
-  // Left Goal Post
+  
   const GoalPost2 = MeshBuilder.CreateBox("GoalPost2", { height: goalPostHeight, width: goalPostWidth, depth: goalPostDepth }, scene);
   GoalPost2.position = new Vector3(-1.25,0,11.5);
+  GoalPost2.material = mat;
   const GoalPost2Physics = new PhysicsAggregate(GoalPost2, PhysicsShapeType.BOX, { mass: 0 }, scene);
 
   return GoalPost2;
 }
   
 function createGoalPosts3(scene: Scene) {
+  const mat = new StandardMaterial("mat");
+  const color = new Color3(1, 1, 1);
+  mat.diffuseColor = color;
   const goalPostHeight = 3;
   const goalPostWidth = 0.2;
   const goalPostDepth = 0.2;
@@ -323,12 +334,16 @@ function createGoalPosts3(scene: Scene) {
   // Right Goal Post
   const GoalPost3 = MeshBuilder.CreateBox("GoalPost3", { height: goalPostHeight, width: goalPostWidth, depth: goalPostDepth }, scene);
   GoalPost3.position = new Vector3(1.25,0,-11.5); // Adjusted position
+  GoalPost3.material = mat;
   const GoalPost3Physics = new PhysicsAggregate(GoalPost3, PhysicsShapeType.BOX, { mass: 0 }, scene);
   
   return GoalPost3;
 }
 
 function createGoalPosts4(scene: Scene) {
+  const mat = new StandardMaterial("mat");
+  const color = new Color3(1, 1, 1);
+  mat.diffuseColor = color;
   const goalPostHeight = 3;
   const goalPostWidth = 0.2;
   const goalPostDepth = 0.2;
@@ -336,12 +351,47 @@ function createGoalPosts4(scene: Scene) {
   // Left Goal Post
   const GoalPost4 = MeshBuilder.CreateBox("GoalPost4", { height: goalPostHeight, width: goalPostWidth, depth: goalPostDepth }, scene);
   GoalPost4.position = new Vector3(-1.25,0,-11.5);
+  GoalPost4.material = mat;
   const GoalPost4Physics = new PhysicsAggregate(GoalPost4, PhysicsShapeType.BOX, { mass: 0 }, scene);
 
   return GoalPost4;
 }
 
-      
+function createGoalPosts5(scene: Scene, diameter: number, height: number, rotationAxis: Vector3, rotationAngle: number): Mesh {
+  const mat = new StandardMaterial("mat");
+  const color = new Color3(1, 1, 1);
+  mat.diffuseColor = color;
+  const goalPosts5 = MeshBuilder.CreateCylinder("goalPosts5", { diameter, height }, scene);
+
+  // Rotate the goal post top based on the provided axis and angle
+  goalPosts5.rotate(rotationAxis, rotationAngle);
+
+  // Adjust the position and make the cylinder longer
+  goalPosts5.position = new Vector3(0, 1.65, 11.5);
+  goalPosts5.scaling.y = 14; // Adjust the scaling factor to make the cylinder longer
+  goalPosts5.material = mat;
+  const goalPosts5Physics = new PhysicsAggregate(goalPosts5, PhysicsShapeType.CYLINDER, { mass: 0 }, scene);
+
+  return goalPosts5;
+}
+
+function createGoalPosts6(scene: Scene, diameter: number, height: number, rotationAxis: Vector3, rotationAngle: number): Mesh {
+  const mat = new StandardMaterial("mat");
+  const color = new Color3(1, 1, 1);
+  mat.diffuseColor = color;
+  const goalPosts6 = MeshBuilder.CreateCylinder("goalPosts6", { diameter, height }, scene);
+
+  // Rotate the goal post top based on the provided axis and angle
+  goalPosts6.rotate(rotationAxis, rotationAngle);
+
+  // Adjust the position and make the cylinder longer
+  goalPosts6.position = new Vector3(0, 1.65, -11.5);
+  goalPosts6.scaling.y = 14; // Adjust the scaling factor to make the cylinder longer
+  goalPosts6.material = mat;
+  const goalPosts5Physics = new PhysicsAggregate(goalPosts6, PhysicsShapeType.CYLINDER, { mass: 0 }, scene);
+
+  return goalPosts6;
+}
     
 
         
@@ -460,7 +510,8 @@ function createGoalPosts4(scene: Scene) {
     that.GoalPost2 = createGoalPosts2(that.scene);
     that.GoalPost3 = createGoalPosts3(that.scene);
     that.GoalPost4 = createGoalPosts4(that.scene);
-    
+    that.GoalPost5 = createGoalPosts5(that.scene, 0.4, 0.2, Vector3.Forward(), Math.PI / 2);
+    that.GoalPost6 = createGoalPosts6(that.scene, 0.4, 0.2, Vector3.Forward(), Math.PI / 2);
     return that;
 
 
